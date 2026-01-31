@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { $bool, $range, $str } from '@scolastico-dev/env-helper';
+import { $bool, $oneOf, $range, $str } from '@scolastico-dev/env-helper';
 import { RedisConfigService } from './redis.config';
 import { OtlpConfigService } from './otlp.config';
 import { CrowdSecConfigService } from './crowdsec.config';
@@ -68,4 +68,16 @@ export class BaseConfigService {
    * @example DEMO_ENABLED=true
    */
   readonly demoEnabled = $bool('DEMO_ENABLED', false);
+
+  /**
+   * Set the log level. Available levels: error, warn, log, debug, verbose.
+   * @env LOG_LEVEL
+   * @default log
+   * @example LOG_LEVEL=debug
+   */
+  readonly logLevel = $oneOf(
+    'LOG_LEVEL',
+    ['error', 'warn', 'log', 'debug', 'verbose'],
+    'log',
+  );
 }

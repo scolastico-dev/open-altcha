@@ -6,7 +6,13 @@ import { BaseConfigService } from './config';
 import packageJson from '../package.json';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const logLevel = ['error', 'warn', 'log', 'debug', 'verbose'];
+  const logIndex = logLevel.indexOf(new BaseConfigService().logLevel);
+  const logger = logLevel.slice(0, logIndex + 1) as Array<
+    'error' | 'warn' | 'log' | 'verbose' | 'debug'
+  >;
+
+  const app = await NestFactory.create(AppModule, { logger });
   app.enableShutdownHooks();
 
   // Get configuration
