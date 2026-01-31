@@ -122,6 +122,6 @@ For a complete list of all available environment variables and their detailed de
 
 The server provides a Swagger UI for API exploration at `/swagger`.
 
-1. **GET `/captcha/challenge**`: Request a new challenge for a domain.
-2. **POST `/captcha/validate**`: Submit the PoW solution for validation. This returns a signature if valid.
-3. **POST `/captcha/verify-backend**`: Used by your backend to verify the signature provided by the client.
+1. **GET `/captcha/challenge`**: Request a new challenge for a domain.
+2. **POST `/captcha/validate`**: Submit the PoW solution for validation. This returns a signature if valid.
+3. **POST `/captcha/verify-backend`**: Used by your backend to verify the signature provided by the client.
