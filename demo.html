@@ -154,6 +154,17 @@
         let originalFormDataSnapshot = null;
         let clientIp = null;
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlDomain = urlParams.get('domain');
+        const urlApi = urlParams.get('api');
+
+        if (urlDomain) {
+            cfgDomain.value = urlDomain;
+        }
+        if (urlApi) {
+            cfgApi.value = urlApi;
+        }
+
         function log(msg) {
             const time = new Date().toLocaleTimeString();
             logLines.push(`[${time}] ${msg}`);
