@@ -1,0 +1,54 @@
+name: Build and Publish Nightly
+
+on:
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - ".vscode/**"
+      - "README.md"
+      - "LICENSE"
+      - "*.md"
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete old nightly containers
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'atlcha-server'
+          package-type: 'container'
+          min-versions-to-keep: 3
+          delete-only-pre-release-versions: "true"
+
+  build:
+    runs-on: ubuntu-latest
+    needs: cleanup
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: mr-smithers-excellent/docker-build-push@v6
+        with:
+          image: atlcha-server
+          tags: nightly,${{ github.sha }}
+          registry: ghcr.io
+          directory: ./
+          dockerfile: ./Dockerfile
+          addLatest: false
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}

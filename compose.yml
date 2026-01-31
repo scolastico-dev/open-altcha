@@ -1,0 +1,49 @@
+services:
+  app:
+    image: ghcr.io/scolastico-dev/open-altcha:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DOMAIN_LIST=example,test
+      - DOMAIN_EXAMPLE_ORIGINS=example.com,localhost
+      - DOMAIN_EXAMPLE_KEY=example-secret-key-change-in-production
+      - DOMAIN_EXAMPLE_MIN_STRENGTH=10
+      - DOMAIN_EXAMPLE_MAX_STRENGTH=90
+      - DOMAIN_TEST_ORIGINS=test.com
+      - DOMAIN_TEST_KEY=test-secret-key-change-in-production
+      - DOMAIN_TEST_MIN_STRENGTH=20
+      - DOMAIN_TEST_MAX_STRENGTH=80
+      - REDIS_ENABLED=true
+      - REDIS_URL=redis://redis:6379
+      - OTLP_ENABLED=true
+      - OTLP_TRACE_ENDPOINT=http://jaeger:4318/v1/traces
+      - OTLP_METRICS_ENDPOINT=http://jaeger:4318/v1/metrics
+      - CROWDSEC_ENABLED=false
+    depends_on:
+      - redis
+      - jaeger
+    restart: unless-stopped
+
+  # Redis for caching and horizontal scaling
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  # Jaeger for OTLP traces and metrics
+  jaeger:
+    image: jaegertracing/all-in-one:1.75.0 # 1.76.0 has a bug with white font on white background in UI
+    ports:
+      - "4318:4318"
+      - "16686:16686"
+      - "14268:14268"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    restart: unless-stopped
+
+volumes:
+  redis-data:

@@ -1,0 +1,51 @@
+ci:
+- changed-files:
+  - any-glob-to-any-file: [.github/workflows/**]
+
+docker:
+- changed-files:
+  - any-glob-to-any-file: [Dockerfile, compose.yml, compose.override.yml, .dockerignore]
+
+package:
+- changed-files:
+  - any-glob-to-any-file: [package.json, pnpm-lock.yaml, pnpm-workspace.yaml]
+
+config:
+- changed-files:
+  - any-glob-to-any-file: [src/config/**]
+
+altcha:
+- changed-files:
+  - any-glob-to-any-file: [src/altcha/**]
+
+abuseipdb:
+- changed-files:
+  - any-glob-to-any-file: [src/abuseipdb/**]
+
+crowdsec:
+- changed-files:
+  - any-glob-to-any-file: [src/crowdsec/**]
+
+spamhaus:
+- changed-files:
+  - any-glob-to-any-file: [src/spamhaus/**]
+
+redis:
+- changed-files:
+  - any-glob-to-any-file: [src/redis/**]
+
+telemetry:
+- changed-files:
+  - any-glob-to-any-file: [src/telemetry/**]
+
+espeak:
+- changed-files:
+  - any-glob-to-any-file: [src/espeak/**]
+
+code:
+- changed-files:
+  - any-glob-to-any-file: [src/**]
+
+documentation:
+- changed-files:
+  - any-glob-to-any-file: [README.md, LICENSE, "*.md"]

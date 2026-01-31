@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenALTCHA Demo</title>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/altcha/dist/altcha.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+        @media (max-width: 1200px) { body { flex-direction: column; } }
+        .container, .debug-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            flex: 1;
+            min-width: 350px;
+        }
+        h1 { font-size: 24px; margin-bottom: 20px; color: #1a1a1a; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #666; }
+        input[type="text"], input[type="email"], textarea {
+            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;
+        }
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .checkbox-group { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 5px; }
+        .captcha-container { margin: 20px 0; min-height: 80px; }
+
+        button {
+            background: #2563eb; color: white; border: none; padding: 12px; border-radius: 6px;
+            font-weight: 600; cursor: pointer; transition: background 0.2s;
+        }
+        button:hover:not(:disabled) { background: #1d4ed8; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .button-group { display: flex; gap: 10px; margin-top: 20px; }
+        .button-group button { flex: 1; }
+        .btn-success { background: #10b981; }
+        .btn-warning { background: #f59e0b; }
+        .btn-secondary { background: #64748b; font-size: 11px; padding: 5px 10px; }
+
+        .debug-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .debug-title { font-size: 12px; font-weight: bold; text-transform: uppercase; color: #888; margin-top: 15px; margin-bottom: 5px;}
+        #log {
+            width: 100%; height: 180px; background: #1e1e1e; color: #d4d4d4;
+            padding: 10px; font-family: 'Courier New', monospace; font-size: 12px;
+            border-radius: 6px; overflow-y: auto; resize: none; border: 1px solid #333;
+        }
+        #code-preview {
+            width: 100%; height: 350px; background: #2d2d2d; color: #9cdcfe;
+            padding: 10px; font-family: monospace; font-size: 11px; border-radius: 6px;
+            white-space: pre; overflow: auto; border: 1px solid #444;
+        }
+        .verification-data { background: #1e1e1e; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; height: 120px; overflow-y: auto; border: 1px solid #333; color: #ce9178; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>OpenALTCHA Demo</h1>
+
+        <div class="config-grid">
+            <div class="form-group">
+                <label>Domain</label>
+                <input type="text" id="cfg_domain" value="localhost">
+            </div>
+            <div class="form-group">
+                <label>API Base URL</label>
+                <input type="text" id="cfg_api" value="/">
+            </div>
+            <div class="checkbox-group" style="grid-column: span 2;">
+                <input type="checkbox" id="cfg_sign" checked>
+                <label for="cfg_sign">Enable Content Signing (SPAM protection)</label>
+            </div>
+            <div class="checkbox-group" style="grid-column: span 2;">
+                <input type="checkbox" id="cfg_disable_autoreset" checked>
+                <label for="cfg_disable_autoreset">Auto-reset on tamper (when signing enabled)</label>
+            </div>
+        </div>
+
+        <form id="demoForm">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required placeholder="John Doe">
+            </div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required placeholder="john@example.com">
+            </div>
+            <div class="form-group">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" required style="width: 100%; min-height: 60px;"></textarea>
+            </div>
+
+            <div class="captcha-container" id="widget-wrapper"></div>
+
+            <div class="button-group">
+                <button type="button" id="verifyBtn" disabled class="btn-success">Verify (Backend Simulation)</button>
+                <button type="button" id="resetBtn" class="btn-warning">Reset</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="debug-panel">
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label>Rapid Challenge Requests</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="number" id="rapid_requests" value="10" min="1" max="1000" style="width: 80px;">
+                <button type="button" id="rapidBtn" style="flex: 1;">Make Rapid Requests</button>
+            </div>
+        </div>
+
+        <div class="debug-header">
+            <div class="debug-title">Execution Log</div>
+            <button class="btn-secondary" onclick="clearLog()">Clear</button>
+        </div>
+        <textarea id="log" readonly></textarea>
+
+        <div class="debug-title">Widget HTML & JS Implementation</div>
+        <div id="code-preview"></div>
+
+        <div class="debug-title">State: Verification Data</div>
+        <div class="verification-data" id="verify-data-display">{}</div>
+    </div>
+
+    <script>
+        const form = document.getElementById('demoForm');
+        const logArea = document.getElementById('log');
+        const codePreview = document.getElementById('code-preview');
+        const wrapper = document.getElementById('widget-wrapper');
+        const verifyDataDisplay = document.getElementById('verify-data-display');
+
+        const cfgDomain = document.getElementById('cfg_domain');
+        const cfgApi = document.getElementById('cfg_api');
+        const cfgSign = document.getElementById('cfg_sign');
+        const cfgDisableAutoreset = document.getElementById('cfg_disable_autoreset');
+
+        const verifyBtn = document.getElementById('verifyBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const rapidBtn = document.getElementById('rapidBtn');
+        const rapidRequests = document.getElementById('rapid_requests');
+
+        let currentPayload = null;
+        let validationResult = null;
+        let logLines = JSON.parse(sessionStorage.getItem('openaltcha_logs')) || [];
+        let originalFormDataSnapshot = null;
+        let clientIp = null;
+
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            logLines.push(`[${time}] ${msg}`);
+            if (logLines.length > 50) logLines.shift();
+            sessionStorage.setItem('openaltcha_logs', JSON.stringify(logLines));
+            renderLogs();
+        }
+
+        function renderLogs() {
+            logArea.value = logLines.join('\n');
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function clearLog() {
+            logLines = [];
+            sessionStorage.removeItem('openaltcha_logs');
+            logArea.value = '';
+            log("[INFO] Log cleared.");
+        }
+
+        function getFormData() {
+            return {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                message: document.getElementById('message').value
+            };
+        }
+
+        function applyValidationResult(result, sourceLabel) {
+            if (!result) return;
+            validationResult = result;
+            verifyDataDisplay.textContent = JSON.stringify(result, null, 2);
+
+            if (result.verified) {
+                log(`[OK] ${sourceLabel} passed.`);
+                verifyBtn.disabled = false;
+            } else {
+                log(`[FAIL] ${sourceLabel}: ${result.reason || 'Invalid'}`);
+                verifyBtn.disabled = true;
+            }
+        }
+
+        function updateWidget() {
+            const domain = cfgDomain.value || 'localhost';
+            let api = cfgApi.value.endsWith('/') ? cfgApi.value : cfgApi.value + '/';
+            // Ensure API URL is absolute for the widget
+            if (!api.startsWith('http://') && !api.startsWith('https://')) {
+                api = location.origin + api;
+            }
+            const challengeUrl = `${api}captcha/challenge?domain=${encodeURIComponent(domain)}`;
+            const verifyUrl = `${api}captcha/validate`;
+            const spamFilter = cfgSign.checked ? 'name,email,message' : '';
+
+            currentPayload = null;
+            validationResult = null;
+            originalFormDataSnapshot = null;
+            verifyBtn.disabled = true;
+            verifyDataDisplay.textContent = "{}";
+            wrapper.innerHTML = '';
+
+            const widget = document.createElement('altcha-widget');
+            widget.setAttribute('challengeurl', challengeUrl);
+            widget.setAttribute('verifyurl', verifyUrl);
+            if (spamFilter) widget.setAttribute('spamfilter', spamFilter);
+            widget.setAttribute('hidefooter', 'true');
+            widget.id = 'altcha';
+
+            wrapper.appendChild(widget);
+
+            widget.addEventListener('statechange', (ev) => {
+                log(`[STATE] ${ev.detail.state.toUpperCase()}`);
+                if (ev.detail.state === 'verified') {
+                    currentPayload = ev.detail.payload || validationResult?.payload || currentPayload;
+                    originalFormDataSnapshot = JSON.stringify(getFormData());
+                    log('[DATA] Payload received.');
+                }
+            });
+
+            widget.addEventListener('sentinelverification', (ev) => {
+                applyValidationResult(ev.detail, 'Auto-validate');
+            });
+
+            widget.addEventListener('serververification', (ev) => {
+                applyValidationResult(ev.detail, 'Auto-validate');
+            });
+
+            const spamFilterAttr = spamFilter ? `\n    spamfilter="${spamFilter}"` : '';
+            codePreview.textContent = `<script type="module" src="https://cdn.jsdelivr.net/npm/altcha/dist/altcha.min.js"><\/script>
+
+<form id="contactForm">
+  <input type="text" name="name" required>
+  <input type="email" name="email" required>
+  <textarea name="message" required><\/textarea>
+
+  <altcha-widget
+    id="altcha"
+    challengeurl="${challengeUrl}"
+    verifyurl="${api}captcha/validate"${spamFilterAttr}
+  ><\/altcha-widget>
+
+  <button type="submit">Submit<\/button>
+</form>
+
+<script>
+  document.getElementById('contactForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const widget = document.getElementById('altcha');
+
+    // The widget automatically handles validation via 'verifyurl' when solved.
+    // We just need to ensure the widget is verified before proceeding.
+    const state = widget.getState();
+    if (state !== 'verified') return alert('Please solve the CAPTCHA');
+
+    const payload = await widget.getPayload();
+
+    // In a real application, you send the form data along with the verification result
+    // to your backend. The widget's 'serververification' event provides the
+    // verificationData, signature, and time needed for the backend check.
+
+    // Example of sending to your backend:
+    // await fetch('/api/your-endpoint', {
+    //   method: 'POST',
+    //   body: JSON.stringify({
+    //     ...formFields,
+    //     altchaData: widget.getPayload() // Includes verificationData, signature, etc.
+    //   })
+    // });
+
+    // YOUR BACKEND LOGIC:
+    // The API receiving form data must verify the signature. You have two options:
+    // 1. Manually check the signature using your secret key. You MUST store
+    //    the signature in a database to prevent replay attacks.
+    // 2. Call POST /captcha/verify on the OpenALTCHA API:
+    //    {
+    //      "domain": "${domain}",
+    //      "verificationData": "eyJhbGdvcml0aG0iOi4uLn0=",
+    //      "signature": "abc123...",
+    //      "time": 1706745600000,
+    //      "ip": "192.168.1.1"
+    //    }
+    //    If it returns { "valid": true }, the request is authentic and the
+    //    OpenALTCHA API has already handled the replay attack prevention.
+  });
+<\/script>`;
+        }
+
+        form.querySelectorAll('input, textarea').forEach(el => {
+            el.addEventListener('input', () => {
+                const widget = document.getElementById('altcha');
+                if (cfgSign.checked && currentPayload && cfgDisableAutoreset.checked) {
+                    log('[WARN] Form data tampered. Resetting widget.');
+                    currentPayload = null;
+                    validationResult = null;
+                    verifyBtn.disabled = true;
+                    if (widget) widget.reset();
+                }
+            });
+        });
+
+        verifyBtn.addEventListener('click', async () => {
+            if (!validationResult) return;
+
+            const currentData = getFormData();
+            const isTampered = originalFormDataSnapshot && JSON.stringify(currentData) !== originalFormDataSnapshot;
+
+            log('[WAIT] Calling /captcha/verify (Backend-to-Backend simulation)...');
+
+            try {
+                const api = cfgApi.value.endsWith('/') ? cfgApi.value : cfgApi.value + '/';
+
+                // Fetch client IP if not already fetched
+                if (!clientIp) {
+                    try {
+                        const ipRes = await fetch(`${api}ip`);
+                        const ipData = await ipRes.json();
+                        clientIp = ipData.ip;
+                        log(`[INFO] Fetched client IP: ${clientIp}`);
+                    } catch (err) {
+                        log(`[WARN] Failed to fetch IP: ${err.message}`);
+                    }
+                }
+
+                let vDataRaw = validationResult.verificationData;
+                let vDataToSend = vDataRaw;
+
+                if (cfgSign.checked && isTampered) {
+                    log('[TAMPER] Data modified. Syncing verificationData. Expected to FAIL.');
+                    try {
+                        let decoded;
+                        if (vDataRaw.trim().startsWith('{')) {
+                            decoded = JSON.parse(vDataRaw);
+                        } else {
+                            decoded = JSON.parse(atob(vDataRaw));
+                        }
+
+                        // Apply tampered fields
+                        decoded.fields = currentData;
+
+                        vDataToSend = vDataRaw.trim().startsWith('{')
+                            ? JSON.stringify(decoded)
+                            : btoa(JSON.stringify(decoded));
+                    } catch (e) {
+                        log('[ERROR] Re-sync failed: ' + e.message);
+                    }
+                }
+
+                const verifyPayload = {
+                    domain: cfgDomain.value,
+                    verificationData: vDataToSend,
+                    signature: validationResult.signature,
+                    time: validationResult.time
+                };
+
+                if (clientIp) {
+                    verifyPayload.ip = clientIp;
+                }
+
+                const res = await fetch(`${api}captcha/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(verifyPayload)
+                });
+
+                const result = await res.json();
+                if (result.valid) {
+                    log('[SUCCESS] Backend Verification passed. Signature is authentic.');
+                } else {
+                    log('[FAIL] Backend Verification failed. ' + (result.reason || 'Invalid signature.'));
+                }
+            } catch (err) {
+                log(`[ERROR] ${err.message}`);
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            log('[INFO] Resetting demo...');
+            form.reset();
+            updateWidget();
+        });
+
+        rapidBtn.addEventListener('click', async () => {
+            const count = parseInt(rapidRequests.value) || 10;
+            const domain = cfgDomain.value || 'localhost';
+            const api = cfgApi.value.endsWith('/') ? cfgApi.value : cfgApi.value + '/';
+            const challengeUrl = `${api}captcha/challenge?domain=${encodeURIComponent(domain)}`;
+
+            log(`[WAIT] Starting ${count} rapid requests to challenge API...`);
+            rapidBtn.disabled = true;
+
+            for (let i = 1; i <= count; i++) {
+                try {
+                    const res = await fetch(challengeUrl);
+                    await res.json();
+                    log(`[${i}/${count}] Challenge request completed`);
+                } catch (err) {
+                    log(`[${i}/${count}] Challenge request failed: ${err.message}`);
+                }
+            }
+
+            log(`[OK] Completed ${count} rapid requests.`);
+            rapidBtn.disabled = false;
+        });
+
+        [cfgDomain, cfgApi, cfgSign, cfgDisableAutoreset].forEach(el => el.addEventListener('change', updateWidget));
+
+        renderLogs();
+        updateWidget();
+        log('[INFO] OpenALTCHA Demo Ready.');
+    </script>
+</body>
+</html>
