@@ -10,22 +10,8 @@ on:
       - "*.md"
 
 jobs:
-  cleanup:
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-    steps:
-      - name: Delete old nightly containers
-        uses: actions/delete-package-versions@v5
-        with:
-          package-name: 'atlcha-server'
-          package-type: 'container'
-          min-versions-to-keep: 3
-          delete-only-pre-release-versions: "true"
-
   build:
     runs-on: ubuntu-latest
-    needs: cleanup
     permissions:
       contents: read
       packages: write
@@ -52,3 +38,12 @@ jobs:
           addLatest: false
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete old nightly containers
+        uses: actions/delete-package-versions@v5
+        continue-on-error: true
+        with:
+          package-name: 'atlcha-server'
+          package-type: 'container'
+          min-versions-to-keep: 3
+          delete-only-pre-release-versions: "true"
