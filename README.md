@@ -2,6 +2,8 @@
 
 OpenALTCHA Server is a self-hosted, high-performance challenge-response system designed to protect web applications from bots and automated abuse. It is a drop-in replacement for [ALTCHA's Sentinel](https://altcha.org/), implementing advanced security features like dynamic difficulty, IP reputation checks, and anti-tampering signatures.
 
+Visit our hosted demo at [https://altcha.scolasti.co/demo?domain=altcha.scolasti.co](https://altcha.scolasti.co/demo?domain=altcha.scolasti.co) to give it a try.
+
 ## Features
 
 * **Dynamic Difficulty:** Automatically adjusts CAPTCHA complexity based on the client's threat level.
