@@ -1,6 +1,6 @@
 # OpenALTCHA Server
 
-OpenALTCHA Server is a self-hosted, high-performance challenge-response system designed to protect web applications from bots and automated abuse. It is a drop-in replacement or companion for [ALTCHA](https://altcha.org/), adding advanced security features like dynamic difficulty, IP reputation checks, and anti-tampering signatures.
+OpenALTCHA Server is a self-hosted, high-performance challenge-response system designed to protect web applications from bots and automated abuse. It is a drop-in replacement for [ALTCHA's Sentinel](https://altcha.org/), implementing advanced security features like dynamic difficulty, IP reputation checks, and anti-tampering signatures.
 
 ## Features
 
@@ -116,7 +116,7 @@ For every domain in `DOMAIN_LIST` (e.g., `example`), you must configure:
 
 ### Full Documentation
 
-For a complete list of all available environment variables and their detailed descriptions, please visit our **[Environment Documentation Page](https://www.google.com/search?q=https://scolastico-dev.github.io/open-altcha/)**.
+For a complete list of all available environment variables and their detailed descriptions, please visit our **[Environment Documentation Page](https://scolastico-dev.github.io/open-altcha/)**.
 
 ## API Usage
 
