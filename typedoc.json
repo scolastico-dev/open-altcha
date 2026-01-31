@@ -1,0 +1,9 @@
+{
+  "entryPoints": ["src/config/index.ts"],
+  "out": "docs",
+  "blockTags": ["@env", "@values", "@see", "@default", "@example"],
+  "disableGit": true,
+  "disableSources": true,
+  "readme": "none",
+  "customCss": "./docs.css"
+}

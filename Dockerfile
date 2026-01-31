@@ -17,6 +17,7 @@ RUN apk add --no-cache curl espeak sox
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --prod --frozen-lockfile
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/docs ./docs
 COPY demo.html ./
 
 EXPOSE 3000

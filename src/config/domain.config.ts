@@ -1,26 +1,158 @@
 import { $bool, $list, $range, $str } from '@scolastico-dev/env-helper';
 
 export interface DomainConfig {
+  /**
+   * The domain identifier name.
+   */
   name: string;
+
+  /**
+   * Comma-separated list of allowed origins for this domain.
+   * @env DOMAIN_<NAME>_ORIGINS
+   * @example DOMAIN_EXAMPLE_ORIGINS=https://example.com,https://www.example.com
+   */
   origins: string[];
+
+  /**
+   * Secret key for the domain.
+   * @env DOMAIN_<NAME>_KEY
+   * @example DOMAIN_EXAMPLE_KEY=your-secret-key
+   */
   key: string;
+
+  /**
+   * Minimum challenge strength (0 to Number.MAX_SAFE_INTEGER).
+   * @env DOMAIN_<NAME>_MIN_STRENGTH
+   * @default 10
+   * @example DOMAIN_EXAMPLE_MIN_STRENGTH=20
+   */
   minStrength: number;
+
+  /**
+   * Maximum challenge strength (0 to Number.MAX_SAFE_INTEGER).
+   * @env DOMAIN_<NAME>_MAX_STRENGTH
+   * @default 90
+   * @example DOMAIN_EXAMPLE_MAX_STRENGTH=80
+   */
   maxStrength: number;
+
+  /**
+   * Enable code verification if strength is greater than this value (-1 to 100).
+   * @env DOMAIN_<NAME>_CODE_VERIFICATION_IF_STRENGTH_GT
+   * @default 70
+   * @example DOMAIN_EXAMPLE_CODE_VERIFICATION_IF_STRENGTH_GT=70
+   */
   codeVerificationIfStrengthGT: number;
+
+  /**
+   * Length of verification code (4 to 10).
+   * @env DOMAIN_<NAME>_CODE_VERIFICATION_LENGTH
+   * @default 6
+   * @example DOMAIN_EXAMPLE_CODE_VERIFICATION_LENGTH=6
+   */
   codeVerificationLength: number;
+
+  /**
+   * Challenge expiration time in seconds (60 to 3600).
+   * @env DOMAIN_<NAME>_CHALLENGE_EXPIRES_SECONDS
+   * @default 300
+   * @example DOMAIN_EXAMPLE_CHALLENGE_EXPIRES_SECONDS=300
+   */
   challengeExpiresSeconds: number;
+
+  /**
+   * Whether to verify IP address.
+   * @env DOMAIN_<NAME>_VERIFY_IP_ADDRESS
+   * @default true
+   * @example DOMAIN_EXAMPLE_VERIFY_IP_ADDRESS=true
+   */
   verifyIpAddress: boolean;
+
+  /**
+   * Host to forward requests to (optional).
+   * @env DOMAIN_<NAME>_FORWARD_HOST
+   * @example DOMAIN_EXAMPLE_FORWARD_HOST=https://api.example.com
+   */
   forwardHost?: string;
+
+  /**
+   * Penalty points for challenge requests (0 to Number.MAX_SAFE_INTEGER).
+   * @env DOMAIN_<NAME>_CHALLENGE_REQUEST_PENALTY
+   * @default 5
+   * @example DOMAIN_EXAMPLE_CHALLENGE_REQUEST_PENALTY=5
+   */
   challengeRequestPenalty: number;
+
+  /**
+   * Threshold for high failure rate (0 to 1).
+   * @env DOMAIN_<NAME>_HIGH_FAILURE_RATE_THRESHOLD
+   * @default 0.5
+   * @example DOMAIN_EXAMPLE_HIGH_FAILURE_RATE_THRESHOLD=0.5
+   */
   highFailureRateThreshold: number;
+
+  /**
+   * Strength increase for high failure rate (0 to Number.MAX_SAFE_INTEGER).
+   * @env DOMAIN_<NAME>_HIGH_FAILURE_RATE_INCREASE
+   * @default 30
+   * @example DOMAIN_EXAMPLE_HIGH_FAILURE_RATE_INCREASE=30
+   */
   highFailureRateIncrease: number;
+
+  /**
+   * Threshold for medium failure rate (0 to 1).
+   * @env DOMAIN_<NAME>_MEDIUM_FAILURE_RATE_THRESHOLD
+   * @default 0.3
+   * @example DOMAIN_EXAMPLE_MEDIUM_FAILURE_RATE_THRESHOLD=0.3
+   */
   mediumFailureRateThreshold: number;
+
+  /**
+   * Strength increase for medium failure rate (0 to Number.MAX_SAFE_INTEGER).
+   * @env DOMAIN_<NAME>_MEDIUM_FAILURE_RATE_INCREASE
+   * @default 15
+   * @example DOMAIN_EXAMPLE_MEDIUM_FAILURE_RATE_INCREASE=15
+   */
   mediumFailureRateIncrease: number;
+
+  /**
+   * Threshold for many attempts (0 to Number.MAX_SAFE_INTEGER).
+   * @env DOMAIN_<NAME>_MANY_ATTEMPTS_THRESHOLD
+   * @default 10
+   * @example DOMAIN_EXAMPLE_MANY_ATTEMPTS_THRESHOLD=10
+   */
   manyAttemptsThreshold: number;
+
+  /**
+   * Strength increase for many attempts (0 to Number.MAX_SAFE_INTEGER).
+   * @env DOMAIN_<NAME>_MANY_ATTEMPTS_INCREASE
+   * @default 10
+   * @example DOMAIN_EXAMPLE_MANY_ATTEMPTS_INCREASE=10
+   */
   manyAttemptsIncrease: number;
-  // New security options
+
+  /**
+   * Enable AbuseIPDB checking for this domain.
+   * @env DOMAIN_<NAME>_ENABLE_ABUSEIPDB
+   * @default false
+   * @example DOMAIN_EXAMPLE_ENABLE_ABUSEIPDB=true
+   */
   enableAbuseIPDB: boolean;
+
+  /**
+   * Enable Spamhaus checking for this domain.
+   * @env DOMAIN_<NAME>_ENABLE_SPAMHAUS
+   * @default false
+   * @example DOMAIN_EXAMPLE_ENABLE_SPAMHAUS=true
+   */
   enableSpamhaus: boolean;
+
+  /**
+   * Enable disposable email checking for this domain.
+   * @env DOMAIN_<NAME>_ENABLE_DISPOSABLE_EMAIL_CHECK
+   * @default false
+   * @example DOMAIN_EXAMPLE_ENABLE_DISPOSABLE_EMAIL_CHECK=true
+   */
   enableDisposableEmailCheck: boolean;
 }
 
@@ -45,42 +177,12 @@ export class DomainConfigService {
 
   /**
    * Comma-separated list of domain identifiers.
-   * For each domain in the list, the following environment variables can be configured:
-   *
-   * Required:
-   * - DOMAIN_<NAME>_ORIGINS: Comma-separated list of allowed origins
-   * - DOMAIN_<NAME>_KEY: Secret key for the domain
-   *
-   * Optional (with defaults):
-   * - DOMAIN_<NAME>_MIN_STRENGTH: Minimum challenge strength (0 to Number.MAX_SAFE_INTEGER, default: 10)
-   * - DOMAIN_<NAME>_MAX_STRENGTH: Maximum challenge strength (0 to Number.MAX_SAFE_INTEGER, default: 90)
-   * - DOMAIN_<NAME>_CODE_VERIFICATION_IF_STRENGTH_GT: Enable code verification if strength greater than (-1 to 100, default: 70)
-   * - DOMAIN_<NAME>_CODE_VERIFICATION_LENGTH: Length of verification code (4 to 10, default: 6)
-   * - DOMAIN_<NAME>_CHALLENGE_EXPIRES_SECONDS: Challenge expiration time in seconds (60 to 3600, default: 300)
-   * - DOMAIN_<NAME>_VERIFY_IP_ADDRESS: Whether to verify IP address (boolean, default: true)
-   * - DOMAIN_<NAME>_FORWARD_HOST: Host to forward requests to (optional)
-   * - DOMAIN_<NAME>_CHALLENGE_REQUEST_PENALTY: Penalty points for challenge requests (0 to Number.MAX_SAFE_INTEGER, default: 5)
-   * - DOMAIN_<NAME>_HIGH_FAILURE_RATE_THRESHOLD: Threshold for high failure rate (0 to 1, default: 0.5)
-   * - DOMAIN_<NAME>_HIGH_FAILURE_RATE_INCREASE: Strength increase for high failure rate (0 to Number.MAX_SAFE_INTEGER, default: 30)
-   * - DOMAIN_<NAME>_MEDIUM_FAILURE_RATE_THRESHOLD: Threshold for medium failure rate (0 to 1, default: 0.3)
-   * - DOMAIN_<NAME>_MEDIUM_FAILURE_RATE_INCREASE: Strength increase for medium failure rate (0 to Number.MAX_SAFE_INTEGER, default: 15)
-   * - DOMAIN_<NAME>_MANY_ATTEMPTS_THRESHOLD: Threshold for many attempts (0 to Number.MAX_SAFE_INTEGER, default: 10)
-   * - DOMAIN_<NAME>_MANY_ATTEMPTS_INCREASE: Strength increase for many attempts (0 to Number.MAX_SAFE_INTEGER, default: 10)
-   * - DOMAIN_<NAME>_ENABLE_ABUSEIPDB: Enable AbuseIPDB checking for this domain (boolean, default: false)
-   * - DOMAIN_<NAME>_ENABLE_SPAMHAUS: Enable Spamhaus checking for this domain (boolean, default: false)
-   * - DOMAIN_<NAME>_ENABLE_DISPOSABLE_EMAIL_CHECK: Enable disposable email checking for this domain (boolean, default: false)
-   *
-   * @example
-   * DOMAIN_LIST=example,test
-   * DOMAIN_EXAMPLE_ORIGINS=https://example.com,https://www.example.com
-   * DOMAIN_EXAMPLE_KEY=your-secret-key
-   * DOMAIN_EXAMPLE_MIN_STRENGTH=20
-   * DOMAIN_EXAMPLE_MAX_STRENGTH=80
-   * DOMAIN_EXAMPLE_ENABLE_ABUSEIPDB=true
-   * DOMAIN_EXAMPLE_ENABLE_SPAMHAUS=true
-   * DOMAIN_EXAMPLE_ENABLE_DISPOSABLE_EMAIL_CHECK=true
+   * Each domain is configured via environment variables prefixed with DOMAIN_<NAME>_.
+   * See DomainConfig interface for available configuration options.
+   * @env DOMAIN_LIST
+   * @example DOMAIN_LIST=example,test
    */
-  private readonly domainList = $list('DOMAIN_LIST');
+  readonly domainList = $list('DOMAIN_LIST');
 
   /** @hidden */
   getDomains(): DomainConfig[] {
