@@ -19,6 +19,7 @@ RUN pnpm install --prod --frozen-lockfile
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/docs ./docs
 COPY demo.html ./
+COPY LICENSE ./
 
 EXPOSE 3000
 CMD ["node", "dist/src/main"]
