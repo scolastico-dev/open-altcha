@@ -40,7 +40,7 @@ jobs:
         uses: mr-smithers-excellent/docker-build-push@v6
         with:
           tags: latest,${{ github.sha }},${{ github.ref_name }}
-          image: atlcha-server
+          image: open-altcha
           registry: ghcr.io
           directory: ./
           dockerfile: ./Dockerfile

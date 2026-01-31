@@ -30,7 +30,7 @@ jobs:
       - name: Build and Push Docker Image
         uses: mr-smithers-excellent/docker-build-push@v6
         with:
-          image: atlcha-server
+          image: open-altcha
           tags: nightly,${{ github.sha }}
           registry: ghcr.io
           directory: ./
@@ -43,7 +43,7 @@ jobs:
         uses: actions/delete-package-versions@v5
         continue-on-error: true
         with:
-          package-name: 'atlcha-server'
+          package-name: 'open-altcha'
           package-type: 'container'
           min-versions-to-keep: 3
           delete-only-pre-release-versions: "true"

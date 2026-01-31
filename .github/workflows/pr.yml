@@ -38,7 +38,7 @@ jobs:
         run: pnpm build
 
       - name: Try Docker Build
-        run: docker build -t atlcha-server:pr-${{ github.event.pull_request.number }} .
+        run: docker build -t open-altcha:pr-${{ github.event.pull_request.number }} .
 
   dependabot:
     runs-on: ubuntu-latest
