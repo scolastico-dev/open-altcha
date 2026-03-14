@@ -10,6 +10,7 @@ import {
   Req,
   Logger,
   Headers,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Request } from 'express';
@@ -95,6 +96,7 @@ export class ValidationController {
   })
   async validateChallenge(
     @Body() dto: ValidateChallengeDto,
+    @Query('domain') queryDomain: string | undefined,
     @Headers('referer') referer: string,
     @Headers('origin') origin: string,
     @Req() request: Request,
@@ -102,7 +104,7 @@ export class ValidationController {
     return tracer.startActiveSpan('validate-challenge', async (span) => {
       try {
         const ip = this.ipService.extractIp(request);
-        const domain = this.extractDomain(dto.domain, referer, origin);
+        const domain = this.extractDomain(queryDomain || dto.domain, referer, origin);
 
         span.setAttribute('domain', domain);
         span.setAttribute('ip', ip);
@@ -163,6 +165,7 @@ export class ValidationController {
   })
   async verifyBackend(
     @Body() dto: VerifyBackendDto,
+    @Query('domain') queryDomain: string | undefined,
     @Headers('referer') referer: string | undefined,
     @Headers('origin') origin: string | undefined,
     @Req() request: Request,
@@ -173,7 +176,7 @@ export class ValidationController {
         // Note: If IP comes from dto, it's already stripped (via /ip endpoint or validate response)
         // Only strip if we extract it from the current request
         const ip = dto.ip || this.ipService.extractIp(request);
-        const domain = this.extractDomain(dto.domain, referer, origin);
+        const domain = this.extractDomain(queryDomain || dto.domain, referer, origin);
 
         span.setAttribute('domain', domain);
         span.setAttribute('ip', ip);
