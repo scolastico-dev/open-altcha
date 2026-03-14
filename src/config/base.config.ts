@@ -34,6 +34,14 @@ export class BaseConfigService {
   spamhaus = new SpamhausConfigService();
 
   /**
+   * Allow localhost requests to bypass cors, and origin checks.
+   * @env ALLOW_LOCALHOST
+   * @default true
+   * @example ALLOW_LOCALHOST=false
+   */
+  readonly allowLocalhost = $bool('ALLOW_LOCALHOST', true);
+
+  /**
    * The port on which the server will run.
    * @env PORT
    * @default 3000

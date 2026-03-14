@@ -37,7 +37,7 @@ export interface DomainConfig {
   maxStrength: number;
 
   /**
-   * Enable code verification if strength is greater than this value (-1 to 100).
+   * Enable code verification if strength is greater than this value (-1 to Number.MAX_SAFE_INTEGER, -1 to disable).
    * @env DOMAIN_<NAME>_CODE_VERIFICATION_IF_STRENGTH_GT
    * @default 70
    * @example DOMAIN_EXAMPLE_CODE_VERIFICATION_IF_STRENGTH_GT=70
@@ -233,7 +233,7 @@ export class DomainConfigService {
     const codeVerificationIfStrengthGT = $range(
       `DOMAIN_${upperName}_CODE_VERIFICATION_IF_STRENGTH_GT`,
       -1,
-      100,
+      Number.MAX_SAFE_INTEGER,
       70,
     );
     const challengeExpiresSeconds = $range(
