@@ -78,12 +78,12 @@ export class ValidationController {
     );
   }
 
-  @Post('validate')
+  @Post('verify')
   @HttpCode(200)
   @ApiOperation({
-    summary: 'Validate ALTCHA solution and forward if configured',
+    summary: 'Verify ALTCHA solution and forward if configured',
     description:
-      'Validates an ALTCHA solution. Each challenge can only be validated once to prevent replay attacks. Accepts either JSON body {"payload":"..."} or form data with altcha field. If forwardHost is configured for the domain, validated data will be forwarded to that host and the HTML response will be returned.',
+      'Verifies an ALTCHA solution. Each challenge can only be validated once to prevent replay attacks. Accepts either JSON body {"payload":"..."} or form data with altcha field. If forwardHost is configured for the domain, validated data will be forwarded to that host and the HTML response will be returned.',
   })
   @ApiResponse({
     status: 200,
@@ -104,7 +104,11 @@ export class ValidationController {
     return tracer.startActiveSpan('validate-challenge', async (span) => {
       try {
         const ip = this.ipService.extractIp(request);
-        const domain = this.extractDomain(queryDomain || dto.domain, referer, origin);
+        const domain = this.extractDomain(
+          queryDomain || dto.domain,
+          referer,
+          origin,
+        );
 
         span.setAttribute('domain', domain);
         span.setAttribute('ip', ip);
@@ -116,7 +120,7 @@ export class ValidationController {
           payload: dto.payload,
           ip,
           verificationCode: dto.code,
-          data: dto.data,
+          data: dto.fields || dto.data,
         });
 
         this.log.log(
@@ -147,12 +151,12 @@ export class ValidationController {
     });
   }
 
-  @Post('verify')
+  @Post('validate')
   @HttpCode(200)
   @ApiOperation({
-    summary: 'Verify ALTCHA solution from a backend',
+    summary: 'Validate ALTCHA solution from a backend',
     description:
-      'Verifies a previously validated ALTCHA solution using the signature returned from POST /validate. This allows your backend to verify the CAPTCHA was solved without needing Redis. The signature is bound to the IP address (if verifyIpAddress is enabled), domain, and timestamp to prevent replay attacks. Each signature can only be used once.',
+      'Validates an ALTCHA solution using the signature returned from POST /verify. This allows your backend to verify the CAPTCHA was solved without needing Redis. The signature is bound to the IP address (if verifyIpAddress is enabled), domain, and timestamp to prevent replay attacks. Each signature can only be used once.',
   })
   @ApiResponse({
     status: 200,
@@ -176,7 +180,11 @@ export class ValidationController {
         // Note: If IP comes from dto, it's already stripped (via /ip endpoint or validate response)
         // Only strip if we extract it from the current request
         const ip = dto.ip || this.ipService.extractIp(request);
-        const domain = this.extractDomain(queryDomain || dto.domain, referer, origin);
+        const domain = this.extractDomain(
+          queryDomain || dto.domain,
+          referer,
+          origin,
+        );
 
         span.setAttribute('domain', domain);
         span.setAttribute('ip', ip);

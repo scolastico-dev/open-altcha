@@ -21,10 +21,7 @@ async function bootstrap(): Promise<void> {
   const domainConfigService = new DomainConfigService();
   app.use((req: Request, res: Response, next: NextFunction) => {
     // Check if the route is one of the APIs that need CORS allowed based on domain
-    if (
-      !req.path.startsWith('/captcha/') &&
-      !req.path.startsWith('/espeak/')
-    ) {
+    if (!req.path.startsWith('/captcha/') && !req.path.startsWith('/espeak/')) {
       return next();
     }
 
@@ -47,11 +44,16 @@ async function bootstrap(): Promise<void> {
       if (!domainParam) {
         // If it's from localhost, it is expected that the domain is in the query parameters, if its not fail with a 400
         if (req.method === 'OPTIONS') {
-          return res.status(400).send('Bad Request: domain query parameter is required for localhost');
+          return res
+            .status(400)
+            .send(
+              'Bad Request: domain query parameter is required for localhost',
+            );
         }
         res.status(400).json({
           statusCode: 400,
-          message: 'Bad Request: domain query parameter is required for localhost',
+          message:
+            'Bad Request: domain query parameter is required for localhost',
         });
         return;
       }
@@ -66,8 +68,14 @@ async function bootstrap(): Promise<void> {
 
     if (allowedOrigin) {
       res.header('Access-Control-Allow-Origin', origin);
-      res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
+      res.header(
+        'Access-Control-Allow-Methods',
+        'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      );
+      res.header(
+        'Access-Control-Allow-Headers',
+        'Content-Type, Accept, Authorization',
+      );
       res.header('Access-Control-Allow-Credentials', 'true');
     }
 
