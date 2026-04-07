@@ -74,7 +74,7 @@ async function bootstrap(): Promise<void> {
       );
       res.header(
         'Access-Control-Allow-Headers',
-        'Content-Type, Accept, Authorization',
+        'Content-Type, Accept, Authorization, x-altcha-spam-filter',
       );
       res.header('Access-Control-Allow-Credentials', 'true');
     }
